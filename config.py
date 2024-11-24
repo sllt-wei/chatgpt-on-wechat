@@ -152,7 +152,7 @@ available_setting = {
     "dingtalk_client_id": "",  # 钉钉机器人Client ID 
     "dingtalk_client_secret": "",  # 钉钉机器人Client Secret
     "dingtalk_card_enabled": False,
-    
+
     # chatgpt指令自定义触发词
     "clear_memory_commands": ["#清除记忆"],  # 重置会话指令，必须以#开头
     # channel配置
@@ -179,6 +179,7 @@ available_setting = {
     "Minimax_api_key": "",
     "Minimax_group_id": "",
     "Minimax_base_url": "",
+    "command_prefix": "",
 }
 
 
@@ -272,6 +273,8 @@ def load_config():
 
     config_str = read_file(config_path)
     logger.debug("[INIT] config str: {}".format(drag_sensitive(config_str)))
+    logger.info("[INIT] Loading config from: {}".format(config_path))
+
 
     # 将json字符串反序列化为dict类型
     config = Config(json.loads(config_str))

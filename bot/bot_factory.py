@@ -1,15 +1,16 @@
 """
-channel factory
+渠道工厂
 """
 from common import const
 
 
 def create_bot(bot_type):
     """
-    create a bot_type instance
-    :param bot_type: bot type code
-    :return: bot instance
+    创建一个bot实例
+    :param bot_type: bot类型代码
+    :return: bot实例
     """
+    # 根据不同的bot类型创建并返回相应的bot实例
     if bot_type == const.BAIDU:
         # 替换Baidu Unit为Baidu文心千帆对话接口
         # from bot.baidu.baidu_unit_bot import BaiduUnitBot
@@ -28,7 +29,7 @@ def create_bot(bot_type):
         return OpenAIBot()
 
     elif bot_type == const.CHATGPTONAZURE:
-        # Azure chatgpt service https://azure.microsoft.com/en-in/products/cognitive-services/openai-service/
+        # Azure chatgpt 服务 https://azure.microsoft.com/en-in/products/cognitive-services/openai-service/
         from bot.chatgpt.chat_gpt_bot import AzureChatGPTBot
         return AzureChatGPTBot()
 
@@ -63,10 +64,10 @@ def create_bot(bot_type):
     elif bot_type == const.MOONSHOT:
         from bot.moonshot.moonshot_bot import MoonshotBot
         return MoonshotBot()
-    
+
     elif bot_type == const.MiniMax:
         from bot.minimax.minimax_bot import MinimaxBot
         return MinimaxBot()
 
-
+    # 如果传入的bot类型不匹配任何已知类型，抛出运行时错误
     raise RuntimeError

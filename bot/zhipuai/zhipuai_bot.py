@@ -18,14 +18,18 @@ from zhipuai import ZhipuAI
 
 # ZhipuAI对话模型API
 class ZHIPUAIBot(Bot, ZhipuAIImage):
-    # class YourClassName:  # 这里假设类名为 YourClassName，请根据实际情况替换
+    """
+    ZhipuAI对话模型的实现类，继承自Bot和ZhipuAIImage类。
+    该类主要用于处理与ZhipuAI对话模型相关的逻辑，包括初始化、处理回复等。
+    """
+
     def __init__(self):
         """
-            初始化函数，用于设置类的属性和初始化配置。
+        初始化函数，用于设置类的属性和初始化配置。
 
-            本函数中初始化了与智谱AI相关的会话管理和客户端配置。
-            它首先调用了父类的构造函数，然后初始化了会话管理和客户端对象。
-            """
+        本函数中初始化了与智谱AI相关的会话管理和客户端配置。
+        它首先调用了父类的构造函数，然后初始化了会话管理和客户端对象。
+        """
         super().__init__()  # 调用父类的构造方法
         # 初始化会话管理，指定对话模型为配置文件中的模型或默认的"ZHIPU_AI"
         self.sessions = SessionManager(ZhipuAISession, model=conf().get("model") or "ZHIPU_AI")
@@ -33,11 +37,13 @@ class ZHIPUAIBot(Bot, ZhipuAIImage):
             # 以下是来自互联网的信息：
             {search_result}
 
-            # 当前日期: 2024-XX-XX
+            # 当前日期: {current_date}
 
             # 要求：
-            根据最新发布的信息回答用户问题，当回答引用了参考信息时，必须在句末使用对应的来源网站的[ref_序号:来源名称,标题,链接]来标明参考信息来源。
+            根据最新发布的信息回答用户问题，当回答引用了参考信息时，必须在句末使用对应的来源网站的
+            [ref_序号:来源名称,标题,完整链接url]来标明参考信息来源。
             """
+        # print(self.search_prompt)
         # 初始化对话模型的参数
         self.args = {
             "model": conf().get("model") or "glm-4-flash",  # 对话模型的名称，使用配置文件中的设置或默认值"glm-4"
@@ -45,15 +51,26 @@ class ZHIPUAIBot(Bot, ZhipuAIImage):
             "top_p": conf().get("top_p", 0.7),  # top_p 参数，与温度参数一起控制输出的随机性，值在(0,1)之间(智谱AI 的 top_p 不能取 0 或者 1)
             "tools": [{
                 "type": "web_search",
-                "web_search": {"enable": True,  # 启用搜索
-                               "search_result": True,  # 启用返回搜索结果.禁用False，启用：True，默认为禁用
-                               "search_prompt": self.search_prompt}}]  # search_prompt:
+                "web_search": {
+                    "enable": True,  # 启用搜索
+                    "search_result": True,  # 启用返回搜索结果.禁用False，启用：True，默认为禁用
+                    "search_prompt": self.search_prompt}}]  # search_prompt
             # 搜索提示，用于在搜索时提供额外的上下文信息，例如搜索的领域或主题等。
         }
         # 初始化智谱AI客户端，使用配置文件中的API密钥
         self.client = ZhipuAI(api_key=conf().get("zhipu_ai_api_key"))
 
     def reply(self, query, context=None):
+        """
+        根据用户查询和上下文生成回复。
+
+        参数:
+        - query: 用户的查询内容
+        - context: 上下文对象，包含会话ID等信息
+
+        返回:
+        - Reply对象，包含回复类型和回复内容
+        """
         # acquire reply content
         if context.type == ContextType.TEXT:
             logger.info("[ZHIPU_AI] query={}".format(query))
@@ -75,6 +92,10 @@ class ZHIPUAIBot(Bot, ZhipuAIImage):
             session = self.sessions.session_query(query, session_id)
             logger.debug("[ZHIPU_AI] session query={}".format(session.messages))
 
+            # 添加日志输出，检查 search_result 是否正确
+            logger.debug("[ZHIPU_AI] search_result={}".format(self.search_prompt))
+
+
             api_key = context.get("openai_api_key") or openai.api_key
             model = context.get("gpt_model")
             new_args = None
@@ -86,6 +107,8 @@ class ZHIPUAIBot(Bot, ZhipuAIImage):
             #     return self.reply_text_stream(query, new_query, session_id)
 
             reply_content = self.reply_text(session, api_key, args=new_args)
+            logger.debug("[ZHIPU_AI] reply_content=%s", reply_content)
+
             logger.debug(
                 "[ZHIPU_AI] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(
                     session.messages,
@@ -118,11 +141,16 @@ class ZHIPUAIBot(Bot, ZhipuAIImage):
 
     def reply_text(self, session: ZhipuAISession, api_key=None, args=None, retry_count=0) -> dict:
         """
-        call openai's ChatCompletion to get the answer
-        :param session: a conversation session
-        :param session_id: session id
-        :param retry_count: retry count
-        :return: {}
+        调用ZhipuAI的ChatCompletion接口获取回复内容。
+
+        参数:
+        - session: 会话对象，包含对话历史
+        - api_key: API密钥，如果未提供，则使用默认的API密钥
+        - args: 调用参数，如果未提供，则使用类中定义的默认参数
+        - retry_count: 重试次数，默认为0
+
+        返回:
+        - 包含总token数、完成token数和回复内容的字典
         """
         try:
             # if conf().get("rate_limit_chatgpt") and not self.tb4chatgpt.get_token():
@@ -140,14 +168,19 @@ class ZHIPUAIBot(Bot, ZhipuAIImage):
             }
             # response = openai.ChatCompletion.create(api_key=api_key, messages=session.messages, **args)
             response = self.client.chat.completions.create(messages=session.messages, **args)
-            # logger.debug("[ZHIPU_AI] response={}".format(response))
+            logger.debug("[ZHIPU_AI] response={}".format(response))
+            logger.debug("[ZHIPU_AI] response=%s", response)
             # logger.info("[ZHIPU_AI] reply={}, total_tokens={}".format(response.choices[0]['message']['content'], response["usage"]["total_tokens"]))
+            logger.debug(f"[ZHIPU_AI] Request Args: {self.args}")
+            logger.debug(f"[ZHIPU_AI] Session Messages: {session.messages}")
+
 
             return {
                 "total_tokens": response.usage.total_tokens,
                 "completion_tokens": response.usage.completion_tokens,
                 "content": response.choices[0].message.content,
             }
+
         except Exception as e:
             need_retry = retry_count < 2
             result = {"completion_tokens": 0, "content": "我现在有点累了，等会再来吧"}
@@ -181,3 +214,4 @@ class ZHIPUAIBot(Bot, ZhipuAIImage):
                 return self.reply_text(session, api_key, args, retry_count + 1)
             else:
                 return result
+
