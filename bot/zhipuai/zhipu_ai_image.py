@@ -17,7 +17,7 @@ class ZhipuAIImage(object):
             response = self.client.images.generations(
                 prompt=query,
                 n=1,  # 每次生成图片的数量
-                model=conf().get("text_to_image") or "cogview-3",
+                model=conf().get("text_to_image") or "cogview-3-flash",
                 size=conf().get("image_create_size", "1024x1024"),  # 图片大小,可选有 256x256, 512x512, 1024x1024
                 quality="standard",
             )

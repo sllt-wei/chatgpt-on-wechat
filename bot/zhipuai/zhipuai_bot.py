@@ -40,9 +40,8 @@ class ZHIPUAIBot(Bot, ZhipuAIImage):
             # 当前日期: {current_date}
 
             # 要求：
-            使用 search_prompt 允许用户自定义模型引用搜索结果的方式，prompt 必须包含 {search_result} 表示搜索结果
             根据最新发布的信息回答用户问题，当回答引用了参考信息时，必须在句末使用对应的来源网站的
-            [ref_序号:来源名称,标题,接]来标明参考信息来源。
+            [ref_序号:来源名称,标题,完整链接url]来标明参考信息来源。
             """
         # print(self.search_prompt)
         # 初始化对话模型的参数
